@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Win the Lottery App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(to right, #7f7fd5, #86a8e7, #91eae4);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5rem;
+            color: #333;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            margin-top: 20px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #lucky-numbers {
+            font-size: 2rem;
+            margin-top: 20px;
+        }
+        .affirmation {
+            font-style: italic;
+            margin-top: 20px;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Manifest Your Lottery Win</h1>
+    <p>Focus on your goal, visualize your success, and generate your lucky numbers!</p>
+    
+    <button onclick="generateNumbers()">Generate Lucky Numbers</button>
+    
+    <div id="lucky-numbers">Your lucky numbers will appear here!</div>
+    
+    <div class="affirmation" id="affirmation">Today, I am attracting abundance and luck.</div>
+    
+    <script>
+        const affirmations = [
+            "I am destined to win!",
+            "My energy attracts good fortune!",
+            "I am ready to receive my lottery win!",
+            "Luck flows into my life effortlessly.",
+            "Winning the lottery is in my future!",
+            "I am grateful for the abundance in my life."
+        ];
+
+        function generateNumbers() {
+            const numbers = [];
+            for (let i = 0; i < 6; i++) {
+                numbers.push(Math.floor(Math.random() * 49) + 1);
+            }
+            document.getElementById("lucky-numbers").innerText = "Your lucky numbers are: " + numbers.join(", ");
+            
+            // Display a random affirmation
+            const randomAffirmation = affirmations[Math.floor(Math.random() * affirmations.length)];
+            document.getElementById("affirmation").innerText = randomAffirmation;
+        }
+    </script>
+
+</body>
+</html>
