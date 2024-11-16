@@ -3,125 +3,81 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Radiant Circles Effect</title>
-  <script src="https://mozilla.github.io/pdf.js/build/pdf.js"></script>
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-  
- <style>
-     
-body {
-  margin: 0;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #121212;
-}
+  <title>PDF with Ripple Effect</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #121212;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
 
-#pdf-container {
-  position: relative; /* Ensures the ripple is positioned correctly */
-  width: 80%; 
-  height: 90%; 
-  overflow: auto;
-  border: 1px solid #ccc;
-  background: #fff;
-}
+    #pdf-container {
+      position: relative;
+      width: 80%;
+      height: 90%;
+      overflow: hidden;
+      border: 1px solid #ccc;
+    }
 
-.ripple {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0));
-  pointer-events: none; /* Prevent interference with clicking */
-  animation: ripple-animation 1s ease-out forwards;
-  z-index: 10; /* Ensure it's above the PDF content */
-}
+    object {
+      width: 100%;
+      height: 100%;
+    }
 
-@keyframes ripple-animation {
-  from {
-    transform: scale(1);
-    opacity: 1;
-  }
-  to {
-    transform: scale(25);
-    opacity: 0;
-  }
-}
-     
- </style>
+    .ripple {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.6);
+      pointer-events: none;
+      animation: ripple-animation 1s ease-out forwards;
+    }
+
+    @keyframes ripple-animation {
+      from {
+        transform: scale(0);
+        opacity: 1;
+      }
+      to {
+        transform: scale(10);
+        opacity: 0;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div id="pdf-container"></div>
+  <div id="pdf-container">
+    <!-- Embed the PDF -->
+    <object data="http://mysticwavetech.github.io/RandomWork/immortality.pdf" type="application/pdf"></object>
+  </div>
+
   <script>
- 
+    const pdfContainer = document.getElementById('pdf-container');
 
+    // Add the ripple effect on click
+    pdfContainer.addEventListener('click', function(event) {
+      const ripple = document.createElement('div');
+      ripple.classList.add('ripple');
+      
+      const rect = pdfContainer.getBoundingClientRect();
+      const x = event.clientX - rect.left - ripple.offsetWidth / 2;
+      const y = event.clientY - rect.top - ripple.offsetHeight / 2;
 
-const pdfUrl = 'https://cors-anywhere.herokuapp.com/http://mysticwavetech.github.io/RandomWork/immortality.pdf';
+      ripple.style.left = `${x}px`;
+      ripple.style.top = `${y}px`;
 
+      pdfContainer.appendChild(ripple);
 
-// Initialize PDF.js
-const pdfjsLib = window['pdfjs-dist/build/pdf'];
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-
-// Select the container where the PDF will be rendered
-const pdfContainer = document.getElementById('pdf-container');
-
-// Function to load and render the PDF
-async function loadPDF() {
-  try {
-    const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
-
-    // Get the container's dimensions
-    const containerWidth = pdfContainer.clientWidth;
-
-    // Loop through all pages of the PDF
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const viewport = page.getViewport({ scale: 1 });
-
-      // Calculate the scale to fit the page width into the container
-      const scale = containerWidth / viewport.width;
-      const scaledViewport = page.getViewport({ scale });
-
-      // Create a canvas for the page
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      canvas.width = scaledViewport.width;
-      canvas.height = scaledViewport.height;
-
-      // Render the page into the canvas
-      await page.render({ canvasContext: context, viewport: scaledViewport }).promise;
-
-      // Append the canvas to the container
-      pdfContainer.appendChild(canvas);
-    }
-  } catch (error) {
-    console.error('Error loading PDF:', error);
-  }
-}
-
-// Load the PDF
-loadPDF();
-
-// Add ripple effect
-pdfContainer.addEventListener('click', (event) => {
-  const ripple = document.createElement('div');
-  ripple.className = 'ripple';
-  const rect = pdfContainer.getBoundingClientRect();
-
-  // Position the ripple relative to the PDF container
-  ripple.style.left = `${event.clientX - rect.left}px`;
-  ripple.style.top = `${event.clientY - rect.top}px`;
-
-  pdfContainer.appendChild(ripple);
-
-  // Remove the ripple after the animation ends
-  ripple.addEventListener('animationend', () => {
-    ripple.remove();
-  });
-});
+      // Remove the ripple after the animation ends
+      ripple.addEventListener('animationend', () => {
+        ripple.remove();
+      });
+    });
   </script>
 </body>
 </html>
