@@ -3,16 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDF Generation with Effects</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <title>PDF with Mouse Effect</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <style>
     body {
       margin: 0;
       padding: 0;
-      height: 100vh;
       background-color: #333;
       position: relative;
-      overflow: hidden;
+      overflow: auto;
+    }
+
+    #pdf-container {
+      position: relative;
+      width: 100%;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
     }
 
     .radiant-circle {
@@ -32,62 +42,95 @@
         opacity: 0;
       }
     }
+
+    input[type="file"] {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
+      background: #fff;
+      padding: 10px;
+      border: none;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
 
-<script>
-  const { jsPDF } = window.jspdf;
+<input type="file" id="upload" accept="application/pdf" />
 
-  // Function to create radiant circle
-  function createRadiantCircle(x, y) {
+<div id="pdf-container"></div>
+
+<script>
+  const pdfContainer = document.getElementById('pdf-container');
+  const uploadInput = document.getElementById('upload');
+  let pdfDoc = null;
+
+  // Handle PDF file upload
+  uploadInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file && file.type === "application/pdf") {
+      const reader = new FileReader();
+      reader.onload = function() {
+        const loadingTask = pdfjsLib.getDocument(reader.result);
+        loadingTask.promise.then(function(pdf) {
+          pdfDoc = pdf;
+          renderPages();  // Render all pages
+        });
+      };
+      reader.readAsArrayBuffer(file);
+    }
+  });
+
+  // Render all pages of the PDF
+  function renderPages() {
+    for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+      renderPage(pageNum);
+    }
+  }
+
+  // Render a specific page of the PDF
+  function renderPage(pageNum) {
+    pdfDoc.getPage(pageNum).then(function(page) {
+      const viewport = page.getViewport({ scale: 1 });
+      const canvas = document.createElement('canvas');
+      pdfContainer.appendChild(canvas);
+      const context = canvas.getContext('2d');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      const renderContext = {
+        canvasContext: context,
+        viewport: viewport
+      };
+      page.render(renderContext);
+
+      // Add mouse effect on this canvas
+      canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        createRadiantCircle(x, y, canvas);  // Create the radiant circle
+      });
+    });
+  }
+
+  // Mouse effect (radiant circles)
+  function createRadiantCircle(x, y, canvas) {
     const circle = document.createElement('div');
     circle.classList.add('radiant-circle');
     circle.style.width = '50px';
     circle.style.height = '50px';
     circle.style.left = `${x - 25}px`;  // Center the circle
     circle.style.top = `${y - 25}px`;   // Center the circle
-    document.body.appendChild(circle);
+    canvas.parentElement.appendChild(circle);  // Attach to canvas container
 
-    // Remove the circle after the animation completes
+    // Remove the circle after animation
     setTimeout(() => {
       circle.remove();
     }, 1500);
   }
 
-  // Listen for mouse click events
-  document.body.addEventListener('click', (e) => {
-    createRadiantCircle(e.clientX, e.clientY);  // Create the radiant circle
-    generatePDF();  // Call PDF generation function
-  });
-
-  // Listen for touch events
-  document.body.addEventListener('touchstart', (e) => {
-    const touch = e.touches[0];
-    createRadiantCircle(touch.clientX, touch.clientY);  // Create the radiant circle
-    generatePDF();  // Call PDF generation function
-  });
-
-  // Function to generate and download PDF
-  function generatePDF() {
-    const doc = new jsPDF();
-    
-    // Debug log to confirm if PDF generation is triggered
-    console.log("Generating PDF...");
-
-    // Add an image to the PDF (this can be replaced with your own image)
-    const img = new Image();
-    img.src = 'https://mysticwavetech.github.io/RandomWork/immortality.jpg';  // Image URL (you can change it)
-    img.onload = function() {
-      doc.addImage(img, 'JPEG', 10, 10, 180, 160);  // Position and size of the image in the PDF
-      doc.save('generated_pdf_with_image.pdf');  // Save the PDF
-    };
-
-    // Ensure the image is loaded before trying to add it to the PDF
-    img.onerror = function() {
-      console.log("Error loading image");
-    };
-  }
 </script>
 
 </body>
