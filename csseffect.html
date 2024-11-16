@@ -58,33 +58,28 @@
     // Listen for mouse click events
     document.body.addEventListener('click', (e) => {
       createRadiantCircle(e.clientX, e.clientY);
-      generatePDF();
+      generatePDF();  // Call PDF generation function
     });
 
     // Listen for touch events
     document.body.addEventListener('touchstart', (e) => {
       const touch = e.touches[0];
       createRadiantCircle(touch.clientX, touch.clientY);
-      generatePDF();
+      generatePDF();  // Call PDF generation function
     });
 
-    // Function to generate PDF
+    // Function to generate and download PDF
     function generatePDF() {
       const doc = new jsPDF();
 
-      // Example image loading: Use an image URL (can be your own image)
+      // Load an image to be added to the PDF
       const img = new Image();
-      img.src = 'mysticwavetech.github.io/RandomWork/immortality.jpg'; // Replace with your image URL
-
+      img.src = 'https://mysticwavetech.github.io/RandomWork/immortality.pdf';  // Change to your image URL
       img.onload = () => {
         // Add the image to the PDF
-        doc.addImage(img, 'JPEG', 10, 10, 180, 160); // Adjust as needed
-        doc.save('generated_pdf_from_image.pdf');
+        doc.addImage(img, 'JPEG', 10, 10, 180, 160);  // Adjust image size and position
+        doc.save('generated_pdf_with_image.pdf');  // Save the PDF
       };
-
-      // Alternatively, use jsPDF to generate a simple PDF without images
-      // doc.text("Hello, this is a test PDF!", 20, 30);
-      // doc.save('generated_pdf_from_text.pdf');
     }
   </script>
   
