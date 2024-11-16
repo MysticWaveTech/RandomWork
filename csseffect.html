@@ -3,81 +3,90 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDF with Ripple Effect</title>
+  <title>PDF Generation with Effects</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
       margin: 0;
       padding: 0;
-      background-color: #121212;
-      display: flex;
-      justify-content: center;
-      align-items: center;
       height: 100vh;
-    }
-
-    #pdf-container {
+      background-color: #333;
       position: relative;
-      width: 80%;
-      height: 90%;
       overflow: hidden;
-      border: 1px solid #ccc;
     }
 
-    object {
-      width: 100%;
-      height: 100%;
-    }
-
-    .ripple {
+    .radiant-circle {
       position: absolute;
-      width: 50px;
-      height: 50px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.6);
-      pointer-events: none;
-      animation: ripple-animation 1s ease-out forwards;
+      background: rgba(0, 0, 255, 0.5);
+      animation: radiate 1.5s linear forwards;
     }
 
-    @keyframes ripple-animation {
+    @keyframes radiate {
       from {
         transform: scale(0);
-        opacity: 1;
+        opacity: 0.8;
       }
       to {
-        transform: scale(10);
+        transform: scale(4);
         opacity: 0;
       }
     }
   </style>
 </head>
 <body>
-  <div id="pdf-container">
-    <!-- Embed the PDF -->
-    <object data="http://mysticwavetech.github.io/RandomWork/immortality.pdf" type="application/pdf"></object>
-  </div>
 
   <script>
-    const pdfContainer = document.getElementById('pdf-container');
+    const { jsPDF } = window.jspdf;
 
-    // Add the ripple effect on click
-    pdfContainer.addEventListener('click', function(event) {
-      const ripple = document.createElement('div');
-      ripple.classList.add('ripple');
-      
-      const rect = pdfContainer.getBoundingClientRect();
-      const x = event.clientX - rect.left - ripple.offsetWidth / 2;
-      const y = event.clientY - rect.top - ripple.offsetHeight / 2;
+    // Radiant circle effect on mouse/touch events
+    function createRadiantCircle(x, y) {
+      const circle = document.createElement('div');
+      circle.classList.add('radiant-circle');
+      circle.style.width = '50px';
+      circle.style.height = '50px';
+      circle.style.left = `${x - 25}px`;  // Center the circle
+      circle.style.top = `${y - 25}px`;   // Center the circle
+      document.body.appendChild(circle);
 
-      ripple.style.left = `${x}px`;
-      ripple.style.top = `${y}px`;
+      // Remove the circle after the animation completes
+      setTimeout(() => {
+        circle.remove();
+      }, 1500);
+    }
 
-      pdfContainer.appendChild(ripple);
-
-      // Remove the ripple after the animation ends
-      ripple.addEventListener('animationend', () => {
-        ripple.remove();
-      });
+    // Listen for mouse click events
+    document.body.addEventListener('click', (e) => {
+      createRadiantCircle(e.clientX, e.clientY);
+      generatePDF();
     });
+
+    // Listen for touch events
+    document.body.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      createRadiantCircle(touch.clientX, touch.clientY);
+      generatePDF();
+    });
+
+    // Function to generate PDF
+    function generatePDF() {
+      const doc = new jsPDF();
+
+      // Example image loading: Use an image URL (can be your own image)
+      const img = new Image();
+      img.src = 'mysticwavetech.github.io/RandomWork/immortality.jpg'; // Replace with your image URL
+
+      img.onload = () => {
+        // Add the image to the PDF
+        doc.addImage(img, 'JPEG', 10, 10, 180, 160); // Adjust as needed
+        doc.save('generated_pdf_from_image.pdf');
+      };
+
+      // Alternatively, use jsPDF to generate a simple PDF without images
+      // doc.text("Hello, this is a test PDF!", 20, 30);
+      // doc.save('generated_pdf_from_text.pdf');
+    }
   </script>
+  
 </body>
 </html>
