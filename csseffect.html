@@ -52,18 +52,7 @@
       padding: 10px;
       border: none;
       cursor: pointer;
-    }#pdf-container {
-  position: relative;
-  pointer-events: auto; /* Ensure it handles pointer events */
-}
-
-canvas {
-  pointer-events: auto; /* Ensure the canvas processes clicks */
-}
-
-.radiant-circle {
-  pointer-events: none; /* Prevent circle from blocking clicks */
-}
+    }
   </style>
 </head>
 <body>
@@ -116,31 +105,32 @@ canvas {
       };
       page.render(renderContext);
 
-    // Add click event listener to the entire PDF container
-pdfContainer.addEventListener('click', (e) => {
-  const rect = pdfContainer.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
+      // Add mouse effect on this canvas
+      canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        createRadiantCircle(x, y, canvas);  // Create the radiant circle
+      });
+    });
+  }
 
-  // Create radiant circle effect
-  createRadiantCircle(x, y, pdfContainer);
-});
+  // Mouse effect (radiant circles)
+  function createRadiantCircle(x, y, canvas) {
+    const circle = document.createElement('div');
+    circle.classList.add('radiant-circle');
+    circle.style.width = '50px';
+    circle.style.height = '50px';
+    circle.style.left = `${x - 25}px`;  // Center the circle
+    circle.style.top = `${y - 25}px`;   // Center the circle
+    canvas.parentElement.appendChild(circle);  // Attach to canvas container
 
-// Updated radiant circle function
-function createRadiantCircle(x, y, parent) {
-  const circle = document.createElement('div');
-  circle.classList.add('radiant-circle');
-  circle.style.width = '50px';
-  circle.style.height = '50px';
-  circle.style.left = `${x - 25}px`;  // Center the circle
-  circle.style.top = `${y - 25}px`;   // Center the circle
-  parent.appendChild(circle);
+    // Remove the circle after animation
+    setTimeout(() => {
+      circle.remove();
+    }, 1500);
+  }
 
-  // Remove the circle after animation
-  setTimeout(() => {
-    circle.remove();
-  }, 1500);
-}
 </script>
 
 </body>
