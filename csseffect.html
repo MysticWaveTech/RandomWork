@@ -10,20 +10,20 @@
       margin: 0;
       padding: 0;
       background-color: #333;
-      overflow-y: auto;
+      position: relative;
+      overflow: auto;
     }
 
     #pdf-container {
       position: relative;
       width: 100%;
-      margin: 10px auto;
-      max-width: 900px;
     }
 
     canvas {
       display: block;
       width: 100%;
-      margin-bottom: 10px;
+      margin: 10px 0;
+      pointer-events: auto; /* Ensure canvas processes clicks */
     }
 
     .radiant-circle {
@@ -31,6 +31,7 @@
       border-radius: 50%;
       background: rgba(60, 145, 95, 0.9);
       animation: radiate 1.5s linear forwards;
+      pointer-events: none; /* Prevent circle from blocking clicks */
     }
 
     @keyframes radiate {
@@ -45,7 +46,7 @@
     }
 
     input[type="file"] {
-      position: fixed;
+      position: absolute;
       top: 10px;
       left: 10px;
       z-index: 10;
@@ -53,6 +54,9 @@
       padding: 10px;
       border: none;
       cursor: pointer;
+      border-radius: 5px;
+      font-size: 14px;
+      color: #333;
     }
   </style>
 </head>
@@ -63,31 +67,78 @@
 <div id="pdf-container"></div>
 
 <script>
-  // Add click event listener to the entire PDF container
-pdfContainer.addEventListener('click', (e) => {
-  const rect = pdfContainer.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
+  const pdfContainer = document.getElementById('pdf-container');
+  const uploadInput = document.getElementById('upload');
+  let pdfDoc = null;
 
-  // Create radiant circle effect
-  createRadiantCircle(x, y, pdfContainer);
-});
+  // Handle PDF file upload
+  uploadInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file && file.type === "application/pdf") {
+      const reader = new FileReader();
+      reader.onload = function() {
+        const loadingTask = pdfjsLib.getDocument({ data: reader.result });
+        loadingTask.promise.then(function(pdf) {
+          pdfDoc = pdf;
+          renderPages(); // Render all pages
+        }).catch(function(error) {
+          console.error('Error loading PDF:', error);
+          alert('Failed to load PDF. Please try another file.');
+        });
+      };
+      reader.readAsArrayBuffer(file);
+    }
+  });
 
-// Updated radiant circle function
-function createRadiantCircle(x, y, parent) {
-  const circle = document.createElement('div');
-  circle.classList.add('radiant-circle');
-  circle.style.width = '50px';
-  circle.style.height = '50px';
-  circle.style.left = `${x - 25}px`;  // Center the circle
-  circle.style.top = `${y - 25}px`;   // Center the circle
-  parent.appendChild(circle);
+  // Render all pages of the PDF
+  function renderPages() {
+    pdfContainer.innerHTML = ''; // Clear previous pages
+    for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+      renderPage(pageNum);
+    }
+  }
 
-  // Remove the circle after animation
-  setTimeout(() => {
-    circle.remove();
-  }, 1500);
-}
+  // Render a specific page of the PDF
+  function renderPage(pageNum) {
+    pdfDoc.getPage(pageNum).then(function(page) {
+      const viewport = page.getViewport({ scale: 1 });
+      const canvas = document.createElement('canvas');
+      pdfContainer.appendChild(canvas);
+      const context = canvas.getContext('2d');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      const renderContext = {
+        canvasContext: context,
+        viewport: viewport
+      };
+      page.render(renderContext);
+
+      // Add mouse effect on this canvas
+      canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        createRadiantCircle(x, y, pdfContainer); // Create the radiant circle
+      });
+    });
+  }
+
+  // Mouse effect (radiant circles)
+  function createRadiantCircle(x, y, parent) {
+    const circle = document.createElement('div');
+    circle.classList.add('radiant-circle');
+    circle.style.width = '50px';
+    circle.style.height = '50px';
+    circle.style.left = `${x - 25}px`; // Center the circle
+    circle.style.top = `${y - 25}px`;  // Center the circle
+    parent.appendChild(circle);
+
+    // Remove the circle after animation
+    setTimeout(() => {
+      circle.remove();
+    }, 1500);
+  }
 </script>
 
 </body>
