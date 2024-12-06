@@ -10,25 +10,26 @@
       margin: 0;
       padding: 0;
       background-color: #333;
-      position: relative;
-      overflow: auto;
+      overflow-y: auto;
     }
 
     #pdf-container {
       position: relative;
       width: 100%;
+      margin: 10px auto;
+      max-width: 900px;
     }
 
     canvas {
       display: block;
       width: 100%;
-      margin: 10px 0;
+      margin-bottom: 10px;
     }
 
     .radiant-circle {
       position: absolute;
       border-radius: 50%;
-      background: rgba(60, 145, 095, 0.9);
+      background: rgba(60, 145, 95, 0.9);
       animation: radiate 1.5s linear forwards;
     }
 
@@ -44,7 +45,7 @@
     }
 
     input[type="file"] {
-      position: absolute;
+      position: fixed;
       top: 10px;
       left: 10px;
       z-index: 10;
@@ -67,32 +68,25 @@
   let pdfDoc = null;
 
   // Handle PDF file upload
-  uploadInput.addEventListener('change', function(e) {
+  uploadInput.addEventListener('change', function (e) {
     const file = e.target.files[0];
     if (file && file.type === "application/pdf") {
       const reader = new FileReader();
-      reader.onload = function() {
+      reader.onload = function () {
         const loadingTask = pdfjsLib.getDocument(reader.result);
-        loadingTask.promise.then(function(pdf) {
+        loadingTask.promise.then(function (pdf) {
           pdfDoc = pdf;
-          renderPages();  // Render all pages
+          renderPage(1); // Start by rendering the first page
         });
       };
       reader.readAsArrayBuffer(file);
     }
   });
 
-  // Render all pages of the PDF
-  function renderPages() {
-    for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
-      renderPage(pageNum);
-    }
-  }
-
   // Render a specific page of the PDF
   function renderPage(pageNum) {
-    pdfDoc.getPage(pageNum).then(function(page) {
-      const viewport = page.getViewport({ scale: 1 });
+    pdfDoc.getPage(pageNum).then(function (page) {
+      const viewport = page.getViewport({ scale: 1.5 });
       const canvas = document.createElement('canvas');
       pdfContainer.appendChild(canvas);
       const context = canvas.getContext('2d');
@@ -101,16 +95,21 @@
 
       const renderContext = {
         canvasContext: context,
-        viewport: viewport
+        viewport: viewport,
       };
-      page.render(renderContext);
+      page.render(renderContext).promise.then(() => {
+        // Load the next page after rendering the current one
+        if (pageNum < pdfDoc.numPages) {
+          renderPage(pageNum + 1);
+        }
+      });
 
       // Add mouse effect on this canvas
       canvas.addEventListener('click', (e) => {
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        createRadiantCircle(x, y, canvas);  // Create the radiant circle
+        createRadiantCircle(x, y, canvas);
       });
     });
   }
@@ -121,16 +120,15 @@
     circle.classList.add('radiant-circle');
     circle.style.width = '50px';
     circle.style.height = '50px';
-    circle.style.left = `${x - 25}px`;  // Center the circle
-    circle.style.top = `${y - 25}px`;   // Center the circle
-    canvas.parentElement.appendChild(circle);  // Attach to canvas container
+    circle.style.left = `${x - 25}px`;
+    circle.style.top = `${y - 25}px`;
+    canvas.parentElement.appendChild(circle);
 
     // Remove the circle after animation
     setTimeout(() => {
       circle.remove();
     }, 1500);
   }
-
 </script>
 
 </body>
