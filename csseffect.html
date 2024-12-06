@@ -63,72 +63,31 @@
 <div id="pdf-container"></div>
 
 <script>
-  const pdfContainer = document.getElementById('pdf-container');
-  const uploadInput = document.getElementById('upload');
-  let pdfDoc = null;
+  // Add click event listener to the entire PDF container
+pdfContainer.addEventListener('click', (e) => {
+  const rect = pdfContainer.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
 
-  // Handle PDF file upload
-  uploadInput.addEventListener('change', function (e) {
-    const file = e.target.files[0];
-    if (file && file.type === "application/pdf") {
-      const reader = new FileReader();
-      reader.onload = function () {
-        const loadingTask = pdfjsLib.getDocument(reader.result);
-        loadingTask.promise.then(function (pdf) {
-          pdfDoc = pdf;
-          renderPage(1); // Start by rendering the first page
-        });
-      };
-      reader.readAsArrayBuffer(file);
-    }
-  });
+  // Create radiant circle effect
+  createRadiantCircle(x, y, pdfContainer);
+});
 
-  // Render a specific page of the PDF
-  function renderPage(pageNum) {
-    pdfDoc.getPage(pageNum).then(function (page) {
-      const viewport = page.getViewport({ scale: 1.5 });
-      const canvas = document.createElement('canvas');
-      pdfContainer.appendChild(canvas);
-      const context = canvas.getContext('2d');
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
+// Updated radiant circle function
+function createRadiantCircle(x, y, parent) {
+  const circle = document.createElement('div');
+  circle.classList.add('radiant-circle');
+  circle.style.width = '50px';
+  circle.style.height = '50px';
+  circle.style.left = `${x - 25}px`;  // Center the circle
+  circle.style.top = `${y - 25}px`;   // Center the circle
+  parent.appendChild(circle);
 
-      const renderContext = {
-        canvasContext: context,
-        viewport: viewport,
-      };
-      page.render(renderContext).promise.then(() => {
-        // Load the next page after rendering the current one
-        if (pageNum < pdfDoc.numPages) {
-          renderPage(pageNum + 1);
-        }
-      });
-
-      // Add mouse effect on this canvas
-      canvas.addEventListener('click', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        createRadiantCircle(x, y, canvas);
-      });
-    });
-  }
-
-  // Mouse effect (radiant circles)
-  function createRadiantCircle(x, y, canvas) {
-    const circle = document.createElement('div');
-    circle.classList.add('radiant-circle');
-    circle.style.width = '50px';
-    circle.style.height = '50px';
-    circle.style.left = `${x - 25}px`;
-    circle.style.top = `${y - 25}px`;
-    canvas.parentElement.appendChild(circle);
-
-    // Remove the circle after animation
-    setTimeout(() => {
-      circle.remove();
-    }, 1500);
-  }
+  // Remove the circle after animation
+  setTimeout(() => {
+    circle.remove();
+  }, 1500);
+}
 </script>
 
 </body>
