@@ -23,15 +23,13 @@
       display: block;
       width: 100%;
       margin: 10px 0;
-      pointer-events: auto; /* Ensure canvas processes clicks */
     }
 
     .radiant-circle {
       position: absolute;
       border-radius: 50%;
-      background: rgba(60, 145, 95, 0.9);
+      background: rgba(60, 145, 095, 0.9);
       animation: radiate 1.5s linear forwards;
-      pointer-events: none; /* Prevent circle from blocking clicks */
     }
 
     @keyframes radiate {
@@ -54,10 +52,18 @@
       padding: 10px;
       border: none;
       cursor: pointer;
-      border-radius: 5px;
-      font-size: 14px;
-      color: #333;
-    }
+    }#pdf-container {
+  position: relative;
+  pointer-events: auto; /* Ensure it handles pointer events */
+}
+
+canvas {
+  pointer-events: auto; /* Ensure the canvas processes clicks */
+}
+
+.radiant-circle {
+  pointer-events: none; /* Prevent circle from blocking clicks */
+}
   </style>
 </head>
 <body>
@@ -77,13 +83,10 @@
     if (file && file.type === "application/pdf") {
       const reader = new FileReader();
       reader.onload = function() {
-        const loadingTask = pdfjsLib.getDocument({ data: reader.result });
+        const loadingTask = pdfjsLib.getDocument(reader.result);
         loadingTask.promise.then(function(pdf) {
           pdfDoc = pdf;
-          renderPages(); // Render all pages
-        }).catch(function(error) {
-          console.error('Error loading PDF:', error);
-          alert('Failed to load PDF. Please try another file.');
+          renderPages();  // Render all pages
         });
       };
       reader.readAsArrayBuffer(file);
@@ -92,7 +95,6 @@
 
   // Render all pages of the PDF
   function renderPages() {
-    pdfContainer.innerHTML = ''; // Clear previous pages
     for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
       renderPage(pageNum);
     }
@@ -114,31 +116,31 @@
       };
       page.render(renderContext);
 
-      // Add mouse effect on this canvas
-      canvas.addEventListener('click', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        createRadiantCircle(x, y, pdfContainer); // Create the radiant circle
-      });
-    });
-  }
+    // Add click event listener to the entire PDF container
+pdfContainer.addEventListener('click', (e) => {
+  const rect = pdfContainer.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
 
-  // Mouse effect (radiant circles)
-  function createRadiantCircle(x, y, parent) {
-    const circle = document.createElement('div');
-    circle.classList.add('radiant-circle');
-    circle.style.width = '50px';
-    circle.style.height = '50px';
-    circle.style.left = `${x - 25}px`; // Center the circle
-    circle.style.top = `${y - 25}px`;  // Center the circle
-    parent.appendChild(circle);
+  // Create radiant circle effect
+  createRadiantCircle(x, y, pdfContainer);
+});
 
-    // Remove the circle after animation
-    setTimeout(() => {
-      circle.remove();
-    }, 1500);
-  }
+// Updated radiant circle function
+function createRadiantCircle(x, y, parent) {
+  const circle = document.createElement('div');
+  circle.classList.add('radiant-circle');
+  circle.style.width = '50px';
+  circle.style.height = '50px';
+  circle.style.left = `${x - 25}px`;  // Center the circle
+  circle.style.top = `${y - 25}px`;   // Center the circle
+  parent.appendChild(circle);
+
+  // Remove the circle after animation
+  setTimeout(() => {
+    circle.remove();
+  }, 1500);
+}
 </script>
 
 </body>
