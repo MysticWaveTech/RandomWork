@@ -122,9 +122,9 @@
         loading = false;
       });
 
-      // Add radiant effect for clicks
-      canvas.addEventListener('click', (e) => {
-        const rect = canvas.getBoundingClientRect();
+      // Add radiant effect for clicks on the page
+      pageDiv.addEventListener('click', (e) => {
+        const rect = pageDiv.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
         createRadiantCircle(x, y, pageDiv);
