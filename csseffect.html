@@ -3,32 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Responsive Scrollable PDF Viewer</title>
+  <title>Scrollable PDF Viewer</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <style>
     body {
       margin: 0;
       padding: 0;
       background-color: #333;
-      overflow: hidden;
       font-family: Arial, sans-serif;
     }
 
     #pdf-container {
       width: 100%;
-      height: 100vh;
+      max-height: 100vh;
       overflow-y: auto;
-      position: relative;
-      background: #222;
-      cursor: pointer;
+      background-color: #222;
     }
 
     canvas {
       display: block;
       max-width: 100%;
-      height: auto;
-      margin: 20px auto;
-      background: #fff;
+      margin: 10px auto;
+      background-color: #fff;
     }
 
     .radiant-circle {
@@ -72,8 +68,6 @@
   const pdfContainer = document.getElementById('pdf-container');
   const uploadInput = document.getElementById('upload');
   let pdfDoc = null;
-  let currentPage = 1;
-  const scale = 1.5;
 
   // Handle PDF file upload
   uploadInput.addEventListener('change', (e) => {
@@ -84,54 +78,55 @@
         const loadingTask = pdfjsLib.getDocument(reader.result);
         loadingTask.promise.then((pdf) => {
           pdfDoc = pdf;
-          renderPage(currentPage);
+          renderPages(); // Render all pages
         });
       };
       reader.readAsArrayBuffer(file);
     }
   });
 
-  // Render a specific page
+  // Render all pages of the PDF
+  function renderPages() {
+    pdfContainer.innerHTML = ''; // Clear the container
+    for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+      renderPage(pageNum);
+    }
+  }
+
+  // Render a specific page of the PDF
   function renderPage(pageNum) {
     pdfDoc.getPage(pageNum).then((page) => {
-      const viewport = page.getViewport({ scale });
+      const viewport = page.getViewport({ scale: 1 });
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
-      const containerWidth = pdfContainer.clientWidth;
-      const adjustedScale = containerWidth / page.getViewport({ scale: 1 }).width;
-
-      const renderViewport = page.getViewport({ scale: adjustedScale });
-      canvas.width = renderViewport.width;
-      canvas.height = renderViewport.height;
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      pdfContainer.appendChild(canvas);
 
       const renderContext = {
         canvasContext: context,
-        viewport: renderViewport,
+        viewport: viewport,
       };
       page.render(renderContext);
 
-      // Clear the container and add the current canvas
-      pdfContainer.innerHTML = '';
-      pdfContainer.appendChild(canvas);
+      // Add radiant effect for click on canvas
+      canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        createRadiantCircle(x, y);
+      });
     });
   }
 
-  // Apply radiant circle effect on the whole container
-  pdfContainer.addEventListener('click', (e) => {
-    const rect = pdfContainer.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    createRadiantCircle(x, y);
-  });
-
-  // Create radiant circle at the clicked position
+  // Create radiant circle at clicked position
   function createRadiantCircle(x, y) {
     const circle = document.createElement('div');
     circle.classList.add('radiant-circle');
     circle.style.width = '50px';
     circle.style.height = '50px';
-    circle.style.left = `${x - 25}px`; // Center the circle
-    circle.style.top = `${y - 25}px`;  // Center the circle
+    circle.style.left = `${x - 25}px`;
+    circle.style.top = `${y - 25}px`;
     pdfContainer.appendChild(circle);
 
     // Remove the circle after animation
