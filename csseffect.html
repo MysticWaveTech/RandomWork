@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lazy Load Single Page PDF Viewer</title>
+  <title>Responsive Lazy Load PDF Viewer</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <style>
     body {
@@ -18,10 +18,14 @@
       height: 100vh;
       position: relative;
       overflow-y: scroll;
+      background: #222;
+      cursor: pointer;
     }
 
     canvas {
       display: block;
+      max-width: 100%;
+      height: auto;
       margin: auto;
       background: #fff;
     }
@@ -91,56 +95,48 @@
       const viewport = page.getViewport({ scale });
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
+      const containerWidth = pdfContainer.clientWidth;
+      const adjustedScale = containerWidth / page.getViewport({ scale: 1 }).width;
+
+      const renderViewport = page.getViewport({ scale: adjustedScale });
+      canvas.width = renderViewport.width;
+      canvas.height = renderViewport.height;
 
       const renderContext = {
         canvasContext: context,
-        viewport,
+        viewport: renderViewport,
       };
       page.render(renderContext);
 
-      // Clear the container and add the current page
+      // Clear the container and add the current canvas
       pdfContainer.innerHTML = '';
       pdfContainer.appendChild(canvas);
-
-      // Attach the click event for mouse effects
-      canvas.addEventListener('click', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        createRadiantCircle(x, y, pdfContainer);
-      });
     });
   }
 
-  // Mouse effect (radiant circles)
-  function createRadiantCircle(x, y, container) {
+  // Apply radiant circle effect on the whole container
+  pdfContainer.addEventListener('click', (e) => {
+    const rect = pdfContainer.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    createRadiantCircle(x, y);
+  });
+
+  // Create radiant circle at the clicked position
+  function createRadiantCircle(x, y) {
     const circle = document.createElement('div');
     circle.classList.add('radiant-circle');
     circle.style.width = '50px';
     circle.style.height = '50px';
     circle.style.left = `${x - 25}px`; // Center the circle
-    circle.style.top = `${y - 25}px`; // Center the circle
-    container.appendChild(circle);
+    circle.style.top = `${y - 25}px`;  // Center the circle
+    pdfContainer.appendChild(circle);
 
     // Remove the circle after animation
     setTimeout(() => {
       circle.remove();
     }, 1500);
   }
-
-  // Handle scroll to lazy load pages
-  pdfContainer.addEventListener('scroll', () => {
-    const { scrollTop, scrollHeight, clientHeight } = pdfContainer;
-    if (scrollTop + clientHeight >= scrollHeight - 50 && currentPage < pdfDoc.numPages) {
-      currentPage++;
-      renderPage(currentPage);
-    } else if (scrollTop <= 50 && currentPage > 1) {
-      currentPage--;
-      renderPage(currentPage);
-    }
-  });
 </script>
 
 </body>
