@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scrollable PDF Viewer</title>
+  <title>Lazy-Load PDF Viewer</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <style>
     body {
@@ -15,15 +15,24 @@
 
     #pdf-container {
       width: 100%;
-      max-height: 100vh;
-      overflow-y: auto;
+      height: 100vh;
+      overflow-y: scroll;
       background-color: #222;
+    }
+
+    .pdf-page {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      position: relative;
+      margin-bottom: 20px;
     }
 
     canvas {
       display: block;
       max-width: 100%;
-      margin: 10px auto;
+      margin: auto;
       background-color: #fff;
     }
 
@@ -68,6 +77,8 @@
   const pdfContainer = document.getElementById('pdf-container');
   const uploadInput = document.getElementById('upload');
   let pdfDoc = null;
+  let pageNum = 1;
+  let loading = false;
 
   // Handle PDF file upload
   uploadInput.addEventListener('change', (e) => {
@@ -78,62 +89,75 @@
         const loadingTask = pdfjsLib.getDocument(reader.result);
         loadingTask.promise.then((pdf) => {
           pdfDoc = pdf;
-          renderPages(); // Render all pages
+          loadPage(pageNum); // Load the first page
+          setupScrollListener(); // Set up lazy-loading
         });
       };
       reader.readAsArrayBuffer(file);
     }
   });
 
-  // Render all pages of the PDF
-  function renderPages() {
-    pdfContainer.innerHTML = ''; // Clear the container
-    for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
-      renderPage(pageNum);
-    }
-  }
-
   // Render a specific page of the PDF
-  function renderPage(pageNum) {
+  function loadPage(pageNum) {
+    if (loading || pageNum > pdfDoc.numPages) return;
+    loading = true;
+
     pdfDoc.getPage(pageNum).then((page) => {
       const viewport = page.getViewport({ scale: 1 });
       const canvas = document.createElement('canvas');
+      const pageDiv = document.createElement('div');
+      pageDiv.classList.add('pdf-page');
+      pageDiv.appendChild(canvas);
+      pdfContainer.appendChild(pageDiv);
+
       const context = canvas.getContext('2d');
       canvas.width = viewport.width;
       canvas.height = viewport.height;
-      pdfContainer.appendChild(canvas);
 
       const renderContext = {
         canvasContext: context,
         viewport: viewport,
       };
-      page.render(renderContext);
+      page.render(renderContext).promise.then(() => {
+        loading = false;
+      });
 
-      // Add radiant effect for click on canvas
+      // Add radiant effect for clicks
       canvas.addEventListener('click', (e) => {
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        createRadiantCircle(x, y);
+        createRadiantCircle(x, y, pageDiv);
       });
     });
   }
 
+  // Setup scroll listener for lazy-loading
+  function setupScrollListener() {
+    pdfContainer.addEventListener('scroll', () => {
+      const { scrollTop, scrollHeight, clientHeight } = pdfContainer;
+      if (scrollTop + clientHeight >= scrollHeight - 50) {
+        loadPage(++pageNum); // Load next page when scrolled to the bottom
+      }
+    });
+  }
+
   // Create radiant circle at clicked position
-  function createRadiantCircle(x, y) {
+  function createRadiantCircle(x, y, parent) {
     const circle = document.createElement('div');
     circle.classList.add('radiant-circle');
     circle.style.width = '50px';
     circle.style.height = '50px';
-    circle.style.left = `${x - 25}px`;
-    circle.style.top = `${y - 25}px`;
-    pdfContainer.appendChild(circle);
+    circle.style.left = `${x - 25}px`; // Center the circle
+    circle.style.top = `${y - 25}px`;  // Center the circle
+    parent.appendChild(circle);  // Attach to the page container
 
     // Remove the circle after animation
     setTimeout(() => {
       circle.remove();
     }, 1500);
   }
+
 </script>
 
 </body>
