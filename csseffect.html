@@ -28,8 +28,9 @@
     .radiant-circle {
       position: absolute;
       border-radius: 50%;
-      background: rgba(60, 145, 095, 0.9);
+      background: rgba(60, 145, 95, 0.9);
       animation: radiate 1.5s linear forwards;
+      pointer-events: none;
     }
 
     @keyframes radiate {
@@ -104,33 +105,32 @@
         viewport: viewport
       };
       page.render(renderContext);
-
-      // Add mouse effect on this canvas
-      canvas.addEventListener('click', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        createRadiantCircle(x, y, canvas);  // Create the radiant circle
-      });
     });
   }
 
+  // Add mouse effect to the entire PDF container
+  pdfContainer.addEventListener('click', (e) => {
+    const rect = pdfContainer.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    createRadiantCircle(x, y);  // Create the radiant circle
+  });
+
   // Mouse effect (radiant circles)
-  function createRadiantCircle(x, y, canvas) {
+  function createRadiantCircle(x, y) {
     const circle = document.createElement('div');
     circle.classList.add('radiant-circle');
     circle.style.width = '50px';
     circle.style.height = '50px';
     circle.style.left = `${x - 25}px`;  // Center the circle
     circle.style.top = `${y - 25}px`;   // Center the circle
-    canvas.parentElement.appendChild(circle);  // Attach to canvas container
+    pdfContainer.appendChild(circle);  // Attach to PDF container
 
     // Remove the circle after animation
     setTimeout(() => {
       circle.remove();
     }, 1500);
   }
-
 </script>
 
 </body>
